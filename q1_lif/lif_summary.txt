@@ -1,0 +1,9 @@
+deterministic_mu=53.4146866762
+target_mean=0.0600000000
+target_variance=0.0002000000
+best_sigma=0.6000000000
+best_mu=54.0527915955
+best_mean=0.0600291200
+best_variance=0.0001870489
+best_hit_fraction=1.0000000000
+best_score=0.0652409154

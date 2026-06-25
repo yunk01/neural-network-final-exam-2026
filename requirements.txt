@@ -1,0 +1,8 @@
+# Runtime used for the submitted reproducibility scripts:
+#   Python 3.12.13
+numpy==2.3.5
+Pillow==12.2.0
+
+# System tools used for document compilation/verification outside this repo:
+#   TeX Live 2024 with xelatex and latexmk
+#   Poppler with pdftoppm/pdfinfo
