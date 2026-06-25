@@ -24,7 +24,8 @@ python3 -m pip install -r requirements.txt
 - `q4_poisson_direction/poisson_direction_mvub.py`: Poisson population coding
   direction estimator simulation.
 - `q7_maze/maze_solver.py`: maze image parsing and shortest-path/Bellman
-  solver. The input image is `q7_maze/maze.jpg`.
+  solver. The input image is `q7_maze/maze.jpg`; black pixels are treated as
+  walls and the light gray textured bands are treated as walkable paths.
 - `q7_maze/maze_gui.py`: Tkinter interactive maze interface. Click any target
   point in the maze to recompute and display the shortest path.
 

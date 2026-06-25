@@ -6,7 +6,62 @@ import csv
 
 ROOT = Path(__file__).resolve().parent
 MAZE_PATH = ROOT / "maze.jpg"
-DEFAULT_GOAL = (300, 250)
+DEFAULT_GOAL = (450, 260)
+WALKABLE_BRIGHTNESS = 80.0
+TEXTURE_CLOSE_RADIUS = 1
+
+
+def disk_offsets(radius):
+    return [
+        (dx, dy)
+        for dy in range(-radius, radius + 1)
+        for dx in range(-radius, radius + 1)
+        if dx * dx + dy * dy <= radius * radius
+    ]
+
+
+def dilate(mask, radius):
+    height, width = len(mask), len(mask[0])
+    out = [[False] * width for _ in range(height)]
+    offsets = disk_offsets(radius)
+    for y, row in enumerate(mask):
+        for x, value in enumerate(row):
+            if not value:
+                continue
+            for dx, dy in offsets:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < width and 0 <= ny < height:
+                    out[ny][nx] = True
+    return out
+
+
+def erode(mask, radius, bounds):
+    height, width = len(mask), len(mask[0])
+    min_x, max_x, min_y, max_y = bounds
+    out = [[False] * width for _ in range(height)]
+    offsets = disk_offsets(radius)
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            out[y][x] = all(
+                0 <= x + dx < width and 0 <= y + dy < height and mask[y + dy][x + dx]
+                for dx, dy in offsets
+            )
+    return out
+
+
+def close_texture_gaps(mask, radius, bounds):
+    return erode(dilate(mask, radius), radius, bounds)
+
+
+def tint_walkable(img, grid):
+    out = img.convert("RGBA")
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    overlay_pix = overlay.load()
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            if value:
+                overlay_pix[x, y] = (0, 120, 255, 55)
+    return Image.alpha_composite(out, overlay).convert("RGB")
 
 
 def load_grid():
@@ -23,7 +78,7 @@ def load_grid():
     max_x = max(p[0] for p in bright_points)
     min_y = min(p[1] for p in bright_points)
     max_y = max(p[1] for p in bright_points)
-    open_grid = [[False] * width for _ in range(height)]
+    raw_open_grid = [[False] * width for _ in range(height)]
     yellow_points = []
     for y in range(height):
         for x in range(width):
@@ -31,14 +86,16 @@ def load_grid():
             yellow = r > 190 and g > 190 and (int(r) + int(g) - 2 * int(b)) > 120
             bright = (r + g + b) / 3.0
             inside_maze = min_x <= x <= max_x and min_y <= y <= max_y
-            open_grid[y][x] = inside_maze and (yellow or bright < 80.0)
+            raw_open_grid[y][x] = inside_maze and (yellow or bright > WALKABLE_BRIGHTNESS)
             if yellow:
                 yellow_points.append((x, y))
     if not yellow_points:
         raise RuntimeError("No yellow start point was detected.")
+    open_grid = close_texture_gaps(raw_open_grid, TEXTURE_CLOSE_RADIUS, (min_x, max_x, min_y, max_y))
     sx = round(sum(p[0] for p in yellow_points) / len(yellow_points))
     sy = round(sum(p[1] for p in yellow_points) / len(yellow_points))
-    return img, open_grid, (sx, sy)
+    start = nearest_open(open_grid, (sx, sy))
+    return img, open_grid, start
 
 
 def nearest_open(grid, p, max_radius=60):
@@ -87,8 +144,8 @@ def shortest_path(grid, start, goal):
     return path
 
 
-def save_overlay(img, path, start, goal, out_path):
-    out = img.copy()
+def save_overlay(img, path, start, goal, out_path, grid=None):
+    out = tint_walkable(img, grid) if grid is not None else img.copy()
     draw = ImageDraw.Draw(out)
     if path:
         draw.line(path, fill=(255, 0, 0), width=3)
@@ -104,7 +161,7 @@ def main():
     goal = nearest_open(grid, requested_goal)
     path = shortest_path(grid, start, goal)
     out_png = Path("maze_path_overlay.png")
-    save_overlay(img, path, start, goal, out_png)
+    save_overlay(img, path, start, goal, out_png, grid)
     with open("maze_result.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["start_x", "start_y", "requested_goal_x", "requested_goal_y", "goal_x", "goal_y", "reachable", "path_length_pixels"])

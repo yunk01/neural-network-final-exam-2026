@@ -4,7 +4,7 @@ from tkinter import messagebox
 
 from PIL import ImageDraw, ImageTk
 
-from maze_solver import DEFAULT_GOAL, load_grid, nearest_open, shortest_path
+from maze_solver import DEFAULT_GOAL, load_grid, nearest_open, shortest_path, tint_walkable
 
 
 OUTPUT_PATH = Path(__file__).resolve().parent / "maze_interactive_result.png"
@@ -45,7 +45,7 @@ class MazeApp:
         self.solve_and_render(DEFAULT_GOAL, "Default target")
 
     def draw_solution(self, goal=None, path=None):
-        img = self.base_img.copy()
+        img = tint_walkable(self.base_img, self.grid)
         draw = ImageDraw.Draw(img)
         if path:
             draw.line(path, fill=(255, 0, 0), width=3)
