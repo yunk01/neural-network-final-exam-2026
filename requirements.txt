@@ -3,6 +3,8 @@
 numpy==2.3.5
 Pillow==12.2.0
 
+# q7_maze/maze_gui.py also uses tkinter from the Python standard library.
+
 # System tools used for document compilation/verification outside this repo:
 #   TeX Live 2024 with xelatex and latexmk
 #   Poppler with pdftoppm/pdfinfo

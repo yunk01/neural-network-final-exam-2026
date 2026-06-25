@@ -25,6 +25,8 @@ python3 -m pip install -r requirements.txt
   direction estimator simulation.
 - `q7_maze/maze_solver.py`: maze image parsing and shortest-path/Bellman
   solver. The input image is `q7_maze/maze.jpg`.
+- `q7_maze/maze_gui.py`: Tkinter interactive maze interface. Click any target
+  point in the maze to recompute and display the shortest path.
 
 Generated CSV/TXT/PNG files are included so the numerical values in the answer
 PDF can be checked directly.
@@ -36,4 +38,10 @@ cd q1_lif && python3 lif_renewal_sim.py
 cd ../q3_ei_hopf && python3 ei_hopf_sim.py
 cd ../q4_poisson_direction && python3 poisson_direction_mvub.py
 cd ../q7_maze && python3 maze_solver.py
+python3 maze_gui.py
 ```
+
+The GUI script uses Python's standard `tkinter` module plus Pillow. In PyCharm,
+run `q7_maze/maze_gui.py` directly; a window opens, the green point is the
+detected start, the blue point is the target, and the red line is the shortest
+path.
